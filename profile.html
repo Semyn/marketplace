@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | МойМагазин</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- Шапка сайта (такая же, как на других страницах) -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">МойМагазин</div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Главная</a>
+                <a href="cart.html" class="nav-link">Корзина</a>
+                <a href="profile.html" class="nav-link active">Профиль</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Основное содержимое -->
+    <main class="main">
+        <div class="container">
+            <div class="auth-form-container">
+                <form class="auth-form" id="registerForm">
+                    <h2>Создать аккаунт</h2>
+                    
+                    <div class="form-group">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" name="name" required 
+                               placeholder="Введите ваше имя">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="example@mail.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" 
+                               placeholder="+7 (999) 123-45-67">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Пароль</label>
+                        <input type="password" id="password" name="password" required 
+                               placeholder="Не менее 6 символов" minlength="6">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">Подтвердите пароль</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required 
+                               placeholder="Повторите пароль">
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="agree-terms" name="agree-terms" required>
+                        <label for="agree-terms">Я согласен с <a href="#">условиями использования</a></label>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Зарегистрироваться</button>
+                    
+                    <div class="form-footer">
+                        Уже есть аккаунт? <a href="login.html">Войти</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Подвал (такой же, как на других страницах) -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2023 МойМагазин. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>
