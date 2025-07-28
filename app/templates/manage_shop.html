@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Управление магазином: {{ shop.name }}</h1>
+    
+    <a href="{{ url_for('views.add_product', shop_id=shop.id) }}" class="btn">Добавить товар</a>
+    
+    <h2>Ваши товары</h2>
+    
+    {% if shop.products %}
+        <div class="products-grid">
+            {% for product in shop.products %}
+                <div class="product-card">
+                    <h3>{{ product.title }}</h3>
+                    <p class="price">${{ product.price }}</p>
+                    <a href="{{ url_for('views.product', product_id=product.id) }}" class="btn">Просмотр</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>В вашем магазине пока нет товаров</p>
+    {% endif %}
+{% endblock %}

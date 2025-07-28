@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Результаты поиска: "{{ query }}"</h1>
+    
+    {% if results %}
+        <p>Найдено товаров: {{ results|length }}</p>
+        
+        <div class="products-grid">
+            {% for product in results %}
+                <div class="product-card">
+                    <h3>{{ product.title }}</h3>
+                    <p class="price">${{ product.price }}</p>
+                    <p>{{ product.description|truncate(100) }}</p>
+                    <a href="{{ url_for('views.product', product_id=product.id) }}" class="btn">Подробнее</a>
+                    <small>Магазин: {{ product.shop.name }}</small>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>По вашему запросу ничего не найдено</p>
+    {% endif %}
+{% endblock %}

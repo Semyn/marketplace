@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Shop</title>
+    <!-- Базовый шаблон для всех страниц -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{{ url_for('views.index') }}" class="logo">FlaskShop</a>
+            
+            <div class="search-bar">
+                <!-- Форма поиска товаров -->
+                <form action="{{ url_for('views.search') }}" method="GET">
+                    <input type="text" name="q" placeholder="Поиск товаров..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit">Найти</button>
+                </form>
+            </div>
+            
+            <nav>
+                {% if current_user.is_authenticated %}
+                    <!-- Меню для авторизованных пользователей -->
+                    <span>Привет, {{ current_user.email }}</span>
+                    <a href="{{ url_for('views.create_shop') }}">Создать магазин</a>
+                    <a href="{{ url_for('views.logout') }}">Выйти</a>
+                {% else %}
+                    <!-- Меню для гостей -->
+                    <a href="{{ url_for('views.login') }}">Войти</a>
+                    <a href="{{ url_for('views.register') }}">Регистрация</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container">
+        <!-- Отображение flash-сообщений -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Основное содержимое страницы -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 FlaskShop. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>

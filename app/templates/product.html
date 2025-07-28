@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="product-detail">
+        <h1>{{ product.title }}</h1>
+        <p class="price">Цена: ${{ product.price }}</p>
+        <p class="description">{{ product.description }}</p>
+        <p>Магазин: <a href="{{ url_for('views.shop', shop_id=product.shop.id) }}">{{ product.shop.name }}</a></p>
+    </div>
+    
+    <div class="comments-section">
+        <h2>Комментарии</h2>
+        
+        {% if product.comments %}
+            <div class="comments-list">
+                {% for comment in product.comments %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <strong>{{ comment.author.email }}</strong>
+                            <span>{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                        <p>{{ comment.text }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Пока нет комментариев</p>
+        {% endif %}
+        
+        {% if current_user.is_authenticated %}
+            <form method="POST" class="comment-form">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.text.label }}
+                    {{ form.text(class="form-control", rows=3) }}
+                    {% if form.text.errors %}
+                        <div class="errors">{{ form.text.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                {{ form.submit(class="btn") }}
+            </form>
+        {% else %}
+            <p><a href="{{ url_for('views.login') }}">Войдите</a>, чтобы оставить комментарий</p>
+        {% endif %}
+    </div>
+{% endblock %}

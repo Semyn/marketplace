@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Популярные товары</h1>
+    
+    <div class="products-grid">
+        {% for product in products %}
+            <div class="product-card">
+                <p class="price">₽{{ product.price }}</p>
+                <h3 class="product-title">{{ product.title }}</h3>
+
+                <p class="descript">{{ product.description|truncate(100) }}</p>
+                <a href="{{ url_for('views.product', product_id=product.id) }}" class="btn">Подробнее</a>
+                <small>Магазин: {{ product.shop.name }}</small>
+            </div>
+        {% else %}
+            <p>Товаров пока нет</p>
+        {% endfor %}
+    </div>
+{% endblock %}
