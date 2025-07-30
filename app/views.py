@@ -1,33 +1,29 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import db, bcrypt
 from .models import User, Shop, Product, Comment
 from .forms import (LoginForm, RegisterForm, ShopForm, 
-                    ProductForm, CommentForm, SearchForm)
+                    ProductForm, CommentForm, SearchForm,EditProfileForm,ChangePasswordForm)
 import os
+import uuid
 
 views = Blueprint('views', __name__)
 
-# Конфигурация загрузки файлов
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-UPLOAD_FOLDER = 'app/static/uploads'
+UPLOAD_FOLDER = 'static/uploads'
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Главная страница - популярные товары
 @views.route('/')
 def index():
-    # Получаем 10 последних товаров (в реальном приложении нужно сортировать по популярности)
     products = Product.query.order_by(Product.id.desc()).limit(10).all()
     return render_template('index.html', products=products)
 
-# Страница входа
 @views.route('/login', methods=['GET', 'POST'])
 def login():
-    # Если пользователь уже авторизован, перенаправляем на главную
     if current_user.is_authenticated:
         return redirect(url_for('views.index'))
     
@@ -35,7 +31,6 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         
-        # Проверяем пароль с помощью bcrypt
         if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
@@ -53,13 +48,11 @@ def register():
     
     if form.validate_on_submit():
         try:
-            # Проверяем, не занят ли email
             existing_user = User.query.filter_by(email=form.email.data).first()
             if existing_user:
                 flash('Этот email уже зарегистрирован!', 'danger')
                 return redirect(url_for('views.register'))
 
-            # Создаем нового пользователя
             hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             new_user = User(
                 email=form.email.data,
@@ -79,22 +72,30 @@ def register():
     
     return render_template('register.html', form=form)
 
-# Выход из системы
 @views.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('views.index'))
 
-# Создание магазина
 @views.route('/shop/create', methods=['GET', 'POST'])
 @login_required
 def create_shop():
     form = ShopForm()
     if form.validate_on_submit():
+        image_filename = None
+        if form.image.data:
+            image = form.image.data
+            unique_filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
+            image_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, unique_filename)
+            os.makedirs(os.path.dirname(image_path), exist_ok=True)
+            image.save(image_path)
+            image_filename = unique_filename
+
         shop = Shop(
             name=form.name.data,
-            owner=current_user
+            owner=current_user,
+            image=image_filename
         )
         db.session.add(shop)
         db.session.commit()
@@ -102,19 +103,16 @@ def create_shop():
         return redirect(url_for('views.manage_shop', shop_id=shop.id))
     return render_template('create_shop.html', form=form)
 
-# Управление магазином
 @views.route('/shop/manage/<int:shop_id>')
 @login_required
 def manage_shop(shop_id):
     shop = Shop.query.get_or_404(shop_id)
     
-    # Проверяем, что текущий пользователь - владелец магазина
     if shop.owner != current_user:
         abort(403)
     
     return render_template('manage_shop.html', shop=shop)
 
-# Просмотр магазина
 @views.route('/shop/<int:shop_id>')
 def shop(shop_id):
     shop = Shop.query.get_or_404(shop_id)
@@ -132,20 +130,24 @@ def add_product(shop_id):
     
     if form.validate_on_submit():
         try:
-            # Обработка загрузки изображения
             image_filename = None
+            # Исправлено: проверяем, было ли загружено изображение
             if form.image.data:
                 image = form.image.data
-                image_filename = secure_filename(image.filename)
-                image_path = os.path.join(current_app.root_path, 'static/uploads', image_filename)
+                # Генерируем уникальное имя файла
+                unique_filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
+                image_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, unique_filename)
+                # Создаем директорию, если ее нет
+                os.makedirs(os.path.dirname(image_path), exist_ok=True)
                 image.save(image_path)
+                image_filename = unique_filename
             
-            # Создание товара
+            # Создаем товар с изображением
             product = Product(
                 title=form.title.data,
                 description=form.description.data,
                 price=form.price.data,
-                image=image_filename,  # Сохраняем только имя файла
+                image=image_filename,  # Сохраняем имя файла изображения
                 shop_id=shop.id
             )
             
@@ -160,7 +162,6 @@ def add_product(shop_id):
     
     return render_template('add_product.html', form=form, shop=shop)
 
-# Страница товара
 @views.route('/product/<int:product_id>', methods=['GET', 'POST'])
 def product(product_id):
     product = Product.query.get_or_404(product_id)
@@ -183,34 +184,29 @@ def product(product_id):
     
     return render_template('product.html', product=product, form=form)
 
-# Удаление товара
 @views.route('/product/<int:product_id>/delete', methods=['POST'])
 @login_required
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     shop_id = product.shop.id
     
-    # Проверка прав доступа
     if product.shop.owner != current_user:
         abort(403)
     
-    # Удаляем изображение товара, если оно есть
     if product.image:
         try:
-            os.remove(os.path.join(UPLOAD_FOLDER, product.image))
-        except OSError:
-            pass
+            image_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, product.image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        except OSError as e:
+            flash(f'Ошибка при удалении изображения: {str(e)}', 'warning')
     
-    # Удаляем все комментарии к товару
     Comment.query.filter_by(product_id=product.id).delete()
-    
-    # Удаляем сам товар
     db.session.delete(product)
     db.session.commit()
     flash('Товар успешно удален!', 'success')
     return redirect(url_for('views.manage_shop', shop_id=shop_id))
 
-# Поиск товаров
 @views.route('/search')
 def search():
     query = request.args.get('q', '')
@@ -223,16 +219,14 @@ def search():
     else:
         products = []
     
-    return render_template('search.html', products=products, query=query)
+    return render_template('search.html', results=products, query=query)
 
-# Личный кабинет пользователя
 @views.route('/account')
 @login_required
 def account():
     shops = current_user.shops
     return render_template('account.html', shops=shops)
 
-# Редактирование профиля
 @views.route('/account/edit', methods=['GET', 'POST'])
 @login_required
 def edit_account():
@@ -248,7 +242,6 @@ def edit_account():
     
     return render_template('edit_account.html', form=form)
 
-# Изменение пароля
 @views.route('/account/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():

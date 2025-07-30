@@ -20,18 +20,11 @@ from flask_wtf.file import FileAllowed
 from .models import User, Shop
 
 class BaseForm(FlaskForm):
-    """
-    Базовый класс для форм с общими методами валидации
-    """
     def validate_email(self, field):
-        """Проверка уникальности email"""
         if User.query.filter_by(email=field.data).first():
             raise ValidationError('Этот email уже зарегистрирован')
 
 class LoginForm(FlaskForm):
-    """
-    Форма входа в систему
-    """
     email = StringField('Email', validators=[
         DataRequired(message="Поле email обязательно для заполнения"),
         Email(message="Введите корректный email адрес")
@@ -53,9 +46,6 @@ class LoginForm(FlaskForm):
     })
 
 class RegisterForm(BaseForm):
-    """
-    Форма регистрации нового пользователя
-    """
     email = StringField('Email', validators=[
         DataRequired(message="Поле email обязательно для заполнения"),
         Email(message="Введите корректный email адрес"),
@@ -86,9 +76,6 @@ class RegisterForm(BaseForm):
     })
 
 class ShopForm(BaseForm):
-    """
-    Форма создания/редактирования магазина
-    """
     name = StringField('Название магазина', validators=[
         DataRequired(message="Введите название магазина"),
         Length(min=3, max=100, message="Название должно быть от 3 до 100 символов")
@@ -97,12 +84,11 @@ class ShopForm(BaseForm):
         "class": "form-control"
     })
 
-    description = TextAreaField('Описание магазина', validators=[
-        Length(max=500, message="Описание не должно превышать 500 символов")
+    # Новое поле для изображения магазина
+    image = FileField('Изображение магазина', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Только изображения (jpg, jpeg, png)')
     ], render_kw={
-        "placeholder": "Краткое описание вашего магазина...",
-        "class": "form-control",
-        "rows": 3
+        "class": "form-control"
     })
 
     submit = SubmitField('Сохранить', render_kw={
@@ -110,42 +96,47 @@ class ShopForm(BaseForm):
     })
 
     def validate_name(self, field):
-        """
-        Проверка уникальности названия магазина
-        """
         shop = Shop.query.filter_by(name=field.data).first()
-        if shop and (not hasattr(self, 'shop') or shop.id != self.shop.id):
+        if shop and (not hasattr(self, 'shop') or shop.id != self.shop.id ):
             raise ValidationError('Магазин с таким названием уже существует')
 
 class ProductForm(FlaskForm):
     title = StringField('Название товара', validators=[
         DataRequired(message="Введите название товара"),
         Length(min=3, max=100, message="Название должно быть от 3 до 100 символов")
-    ])
+    ], render_kw={
+        "class": "form-control"
+    })
     
     description = TextAreaField('Описание товара', validators=[
         DataRequired(message="Введите описание товара"),
         Length(min=10, max=2000, message="Описание должно быть от 10 до 2000 символов")
-    ])
+    ], render_kw={
+        "class": "form-control",
+        "rows": 5
+    })
     
     price = FloatField('Цена', validators=[
-        DataRequired(message="Укажите цену товара"),
+        DataRequired(message="Укажите цену товара в рублях"),
         NumberRange(min=0.01, message="Цена должна быть больше 0")
-    ])
+    ], render_kw={
+        "class": "form-control"
+    })
     
     image = FileField('Изображение товара', validators=[
         FileAllowed(['jpg', 'jpeg', 'png'], 'Только изображения (jpg, jpeg, png)')
-    ])
+    ], render_kw={
+        "class": "form-control"
+    })
     
-    submit = SubmitField('Сохранить')
+    submit = SubmitField('Сохранить', render_kw={
+        "class": "btn btn-primary"
+    })
 
 class CommentForm(FlaskForm):
-    """
-    Форма добавления комментария к товару
-    """
-    text = TextAreaField('Комментарий', validators=[
-        DataRequired(message="Комментарий не может быть пустым"),
-        Length(min=10, max=500, message="Комментарий должен быть от 10 до 500 символов")
+    text = TextAreaField('Отзыв', validators=[
+        DataRequired(message="Отзыв не может быть пустым"),
+        Length(min=10, max=500, message="Отзыв должен быть от 10 до 500 символов")
     ], render_kw={
         "placeholder": "Ваш отзыв о товаре...",
         "class": "form-control",
@@ -157,9 +148,6 @@ class CommentForm(FlaskForm):
     })
 
 class EditProfileForm(BaseForm):
-    """
-    Форма редактирования профиля пользователя
-    """
     email = StringField('Email', validators=[
         DataRequired(message="Поле email обязательно для заполнения"),
         Email(message="Введите корректный email адрес"),
@@ -174,9 +162,6 @@ class EditProfileForm(BaseForm):
     })
 
 class ChangePasswordForm(FlaskForm):
-    """
-    Форма изменения пароля
-    """
     old_password = PasswordField('Текущий пароль', validators=[
         DataRequired(message="Введите текущий пароль")
     ], render_kw={
@@ -205,9 +190,6 @@ class ChangePasswordForm(FlaskForm):
     })
 
 class SearchForm(FlaskForm):
-    """
-    Форма поиска товаров
-    """
     query = StringField('Поиск', validators=[
         DataRequired(message="Введите поисковый запрос")
     ], render_kw={

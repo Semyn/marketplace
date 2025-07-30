@@ -10,7 +10,7 @@
             {% for product in results %}
                 <div class="product-card">
                     <h3>{{ product.title }}</h3>
-                    <p class="price">${{ product.price }}</p>
+                    <p class="price">₽{{ product.price }}</p>
                     <p>{{ product.description|truncate(100) }}</p>
                     <a href="{{ url_for('views.product', product_id=product.id) }}" class="btn">Подробнее</a>
                     <small>Магазин: {{ product.shop.name }}</small>
@@ -18,6 +18,10 @@
             {% endfor %}
         </div>
     {% else %}
-        <p>По вашему запросу ничего не найдено</p>
+        {% if query %}
+            <p>По вашему запросу "{{ query }}" ничего не найдено</p>
+        {% else %}
+            <p>Введите поисковый запрос</p>
+        {% endif %}
     {% endif %}
 {% endblock %}

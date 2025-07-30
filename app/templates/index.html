@@ -6,9 +6,13 @@
     <div class="products-grid">
         {% for product in products %}
             <div class="product-card">
-                <p class="price">₽{{ product.price }}</p>
+                {% if product.image %}
+                    <img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.title }}" class="product-image">
+                {% else %}
+                    <div class="no-image-small">Нет фото</div>
+                {% endif %}
                 <h3 class="product-title">{{ product.title }}</h3>
-
+                <p class="price">₽{{ product.price }}</p>
                 <p class="descript">{{ product.description|truncate(100) }}</p>
                 <a href="{{ url_for('views.product', product_id=product.id) }}" class="btn">Подробнее</a>
                 <small>Магазин: {{ product.shop.name }}</small>

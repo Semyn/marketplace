@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Добавление товара в магазин: {{ shop.name }}</h1>
     
-    <form method="POST" class="product-form">
+    <form method="POST" class="product-form" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         
         <div class="form-group">
@@ -27,6 +27,16 @@
             {{ form.price(class="form-control") }}
             {% if form.price.errors %}
                 <div class="errors">{{ form.price.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Добавлено поле для загрузки изображения товара -->
+        <div class="form-group">
+            {{ form.image.label }}
+            {{ form.image(class="form-control") }}
+            <small>Рекомендуемый размер: 500x500px, форматы: JPG, PNG</small>
+            {% if form.image.errors %}
+                <div class="errors">{{ form.image.errors[0] }}</div>
             {% endif %}
         </div>
         
